@@ -8,7 +8,11 @@ datasource db {
 }
 
 model Todo {
-  id        Int      @id @default(autoincrement())
-  title     String
-  createdAt DateTime  @default(now())
+  id            Int       @id @default(autoincrement())
+  title         String
+  description   String
+  dueDate       DateTime
+  createdAt     DateTime  @default(now())
+  imageUrl      String?
+  dependencies  String    @default("[]")
 }

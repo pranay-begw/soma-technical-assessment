@@ -7,26 +7,66 @@ export async function GET() {
       orderBy: {
         createdAt: 'desc',
       },
+      select: {
+        id: true,
+        title: true,
+        createdAt: true,
+        dueDate: true,
+        description: true,
+        imageUrl: true,
+        dependencies: true,
+      },
     });
-    return NextResponse.json(todos);
+
+    // Parse the dependencies string into an array of numbers
+    const parsedTodos = todos.map(todo => ({
+      ...todo,
+      dependencies: todo.dependencies ? JSON.parse(todo.dependencies) : []
+    }));
+
+    return NextResponse.json(parsedTodos);
   } catch (error) {
-    return NextResponse.json({ error: 'Error fetching todos' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Error fetching todos' },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const { title } = await request.json();
+    const { title, dueDate, description, imageUrl, dependencies } = await request.json();
+    
     if (!title || title.trim() === '') {
-      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Title is required' },
+        { status: 400 }
+      );
     }
+
     const todo = await prisma.todo.create({
       data: {
         title,
+        dueDate: new Date(dueDate),
+        description,
+        imageUrl: imageUrl || null,
+        // Ensure dependencies is a valid JSON string
+        dependencies: Array.isArray(dependencies) 
+          ? JSON.stringify(dependencies) 
+          : '[]'
       },
     });
-    return NextResponse.json(todo, { status: 201 });
+
+    // Return the todo with parsed dependencies
+    return NextResponse.json({
+      ...todo,
+      dependencies: todo.dependencies ? JSON.parse(todo.dependencies) : []
+    }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: 'Error creating todo' }, { status: 500 });
+    console.error('Error creating todo:', error);
+    return NextResponse.json(
+      { error: 'Error creating todo' },
+      { status: 500 }
+    );
   }
 }
