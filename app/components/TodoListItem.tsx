@@ -25,6 +25,7 @@ export default function TodoListItem({
 }: TodoListItemProps) {
 
   const [imageError, setImageError] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
@@ -89,8 +90,12 @@ export default function TodoListItem({
 
           <button
             onClick={(e) => {
-              e.stopPropagation();
-              onDelete(todo.id);
+              const handleDelete = (e: React.MouseEvent) => {
+                e.stopPropagation();
+                // Always call onDelete - let the parent component handle the ID type
+                onDelete(todo.id);
+              };
+              handleDelete(e);
             }}
             className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
             aria-label="Delete todo"
@@ -171,12 +176,18 @@ export default function TodoListItem({
             <div>
               <h4 className="font-medium text-gray-700 mb-2">Visual</h4>
               <div className="relative h-48 w-full rounded-lg overflow-hidden bg-gray-100">
+                {isImageLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                  </div>
+                )}
                 <Image
                   src={imageUrl}
                   alt={`Visual representation of ${todo.title}`}
                   fill
-                  className="object-cover"
+                  className={`object-cover ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
                   onError={() => setImageError(true)}
+                  onLoadingComplete={() => setIsImageLoading(false)}
                 />
               </div>
             </div>

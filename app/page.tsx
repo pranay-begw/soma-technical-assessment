@@ -19,6 +19,7 @@ const TaskGraph = dynamic(() => import("@/app/components/TaskGraph"), {
 export default function Home() {
   const [newTodo, setNewTodo] = useState("");
   const [todos, setTodos] = useState<TodoWithCalculations[]>([]);
+  const [loadingImages, setLoadingImages] = useState<Record<string | number, boolean>>({});
   const [imageCache, setImageCache] = useState<Record<string, string>>({});
   const [dueDate, setDueDate] = useState("");
   const [description, setDescription] = useState("");
@@ -209,12 +210,28 @@ export default function Home() {
     }
   };
 
-  const handleDeleteTodo = async (id: number) => {
+  const handleDeleteTodo = async (id: number | string) => {
     try {
+      // Only allow deletion of permanent todos (with number IDs)
+      if (typeof id === 'string' && id.startsWith('temp-')) {
+        // For temporary todos, just remove them from the local state
+        setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
+        // Clear any loading state
+        setLoadingImages(prev => {
+          const newState = { ...prev };
+          delete newState[id];
+          return newState;
+        });
+        return;
+      }
+
+      // For permanent todos, make the API call
       await fetch(`/api/todos/${id}`, { method: "DELETE" });
       await fetchTodos();
+      
+      // Clean up the image cache
       const key = String(id);
-      setImageCache((prev) => {
+      setImageCache(prev => {
         if (!(key in prev)) return prev;
         const next = { ...prev };
         delete next[key];
@@ -229,6 +246,9 @@ export default function Home() {
     value: todo.id,
     label: todo.title,
   }));
+  
+  // Filter out temporary todos for dependency selection
+  const permanentTodos = todos.filter(todo => typeof todo.id === 'number');
 
   const criticalPathTasks = todos.filter((todo) => todo.isOnCriticalPath);
   const completedTasks = todos.length;
