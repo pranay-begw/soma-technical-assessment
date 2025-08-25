@@ -69,6 +69,7 @@ Thanks for your time and effort. We'll be in touch soon!
 2. The image is fetched using the description field and displayed in the todo item.
 3. The first image is set as the image of the task.
 4. PEXELS_API_KEY is used to authenticate the request to the Pexels API and can be set using `echo "PEXELS_API_KEY=your_api_key" > .env.local`
+5. I also implemented a local cache for the images to avoid making multiple requests to the Pexels API for the same image for an already created task.
 
 ### Part 3:
 

@@ -127,11 +127,15 @@ export default function Home() {
     e.preventDefault();
     if (!newTodo.trim()) return;
 
-    try {
-      setIsLoading(true);
+    const tempId = `temp-${Date.now()}`; // Create a temporary string ID
+    setIsLoading(true);
+    
+    // Set loading state for the new todo
+    setLoadingImages(prev => ({ ...prev, [tempId]: true }));
 
+    try {
       const tempTodo: TodoWithCalculations = {
-        id: -1, // Temporary ID for the new todo
+        id: tempId, // Temporary string ID
         title: newTodo.trim(),
         description: description.trim(),
         dueDate: dueDate ? new Date(dueDate) : new Date(),
@@ -143,39 +147,65 @@ export default function Home() {
         earliestStartDate: new Date(),
       };
 
-      const allTodos = [...todos, tempTodo];
+      // Add the temporary todo to the list immediately for a responsive UI
+      setTodos(prevTodos => [...prevTodos, tempTodo]);
 
+      // Check for circular dependencies with the temporary todo
+      const allTodos = [...todos, tempTodo];
       if (hasCircularDependency(allTodos)) {
+        // If circular dependency, remove the temp todo and show error
+        setTodos(prevTodos => prevTodos.filter(todo => todo.id !== tempId));
         alert("Error: Adding this dependency would create a circular dependency");
-        setIsLoading(false);
         return;
       }
 
+      // Proceed with API call to create the todo
       const response = await fetch("/api/todos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: newTodo.trim(),
           dueDate,
-          description,
+          description: description.trim(),
           imageUrl: null,
           dependencies: selectedDependencies,
         }),
       });
 
-      setIsLoading(false);
-
-      if (response.ok) {
-        setNewTodo("");
-        setDueDate("");
-        setDescription("");
-        setSelectedDependencies([]);
-        setShowAddForm(false);
-        await fetchTodos();
+      if (!response.ok) {
+        throw new Error(`Failed to create todo: ${response.statusText}`);
       }
+
+      const newTodoItem = await response.json();
+      
+      // If there's a description, trigger image fetch for the new todo
+      if (description.trim()) {
+        await fetchImageForTodo(String(newTodoItem.id), description.trim());
+      }
+      
+      // Reset form and fetch fresh todos list
+      setNewTodo("");
+      setDueDate("");
+      setDescription("");
+      setSelectedDependencies([]);
+      setShowAddForm(false);
+      
+      // Fetch the latest todos to ensure we have the most up-to-date state
+      await fetchTodos();
+      
     } catch (error) {
-      setIsLoading(false);
       console.error("Failed to add todo:", error);
+      // Remove the temporary todo if there was an error
+      setTodos(prevTodos => prevTodos.filter(todo => todo.id !== tempId));
+      alert("Failed to add todo. Please try again.");
+    } finally {
+      // Clear loading states
+      setIsLoading(false);
+      setLoadingImages(prev => {
+        const newState = { ...prev };
+        delete newState[tempId];
+        return newState;
+      });
     }
   };
 
