@@ -25,7 +25,8 @@ export default function TodoListItem({
 }: TodoListItemProps) {
 
   const [imageError, setImageError] = useState(false);
-  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isImageLoading, setIsImageLoading] = useState(false);
+  const [hasImageLoaded, setHasImageLoaded] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
@@ -172,22 +173,27 @@ export default function TodoListItem({
           )}
 
 
-          {imageUrl && !imageError && (
-            <div>
+          {imageUrl && (
+            <div className="min-h-[12rem]">
               <h4 className="font-medium text-gray-700 mb-2">Visual</h4>
-              <div className="relative h-48 w-full rounded-lg overflow-hidden bg-gray-100">
-                {isImageLoading && (
+              <div className="relative w-full rounded-lg overflow-hidden bg-gray-100" style={{ aspectRatio: '16/9' }}>
+                {(isImageLoading || !hasImageLoaded) ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
                   </div>
-                )}
+                ) : null}
                 <Image
                   src={imageUrl}
                   alt={`Visual representation of ${todo.title}`}
                   fill
-                  className={`object-cover ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                  className={`object-cover transition-opacity duration-200 ${hasImageLoaded ? 'opacity-100' : 'opacity-0'}`}
                   onError={() => setImageError(true)}
-                  onLoadingComplete={() => setIsImageLoading(false)}
+                  onLoadingComplete={() => {
+                    setIsImageLoading(false);
+                    setHasImageLoaded(true);
+                  }}
+                  onLoadStart={() => setIsImageLoading(true)}
+                  priority={false}
                 />
               </div>
             </div>

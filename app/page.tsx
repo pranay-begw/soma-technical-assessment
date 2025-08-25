@@ -91,31 +91,51 @@ export default function Home() {
       const res = await fetch("/api/todos");
       const data = await res.json();
 
+      // Preserve the order of existing todos that match the new data
+      const existingTodosMap = new Map(todos.map(todo => [todo.id, todo]));
+      
       const todosWithCalculations: TodoWithCalculations[] = data.map(
-        (todo: Todo) => ({
-          ...todo,
-          dependenciesArray: Array.isArray(todo.dependencies)
-            ? (todo.dependencies as number[])
-            : (() => {
-                try {
-                  const parsed = JSON.parse(
-                    (todo.dependencies as unknown as string) ?? "[]"
-                  );
-                  return Array.isArray(parsed) ? parsed : [];
-                } catch {
-                  return [];
-                }
-              })(),
-          isOnCriticalPath: false,
-        })
+        (todo: Todo) => {
+          // If this todo already exists, preserve its position
+          const existingTodo = existingTodosMap.get(todo.id);
+          
+          return {
+            ...todo,
+            dependenciesArray: Array.isArray(todo.dependencies)
+              ? (todo.dependencies as number[])
+              : (() => {
+                  try {
+                    const parsed = JSON.parse(
+                      (todo.dependencies as unknown as string) ?? "[]"
+                    );
+                    return Array.isArray(parsed) ? parsed : [];
+                  } catch {
+                    return [];
+                  }
+                })(),
+            isOnCriticalPath: false,
+            // Preserve the existing todo's position if it exists
+            ...(existingTodo ? { _order: existingTodo._order } : { _order: Date.now() })
+          };
+        }
       );
 
-      const todosWithDates = calculateEarliestStartDates(todosWithCalculations);
+      // Sort todos by their original order if it exists, otherwise by ID
+      const sortedTodos = [...todosWithCalculations].sort((a, b) => {
+        if (a._order && b._order) return a._order - b._order;
+        if (a._order) return -1;
+        if (b._order) return 1;
+        return 0;
+      });
 
+      const todosWithDates = calculateEarliestStartDates(sortedTodos);
       const criticalPath = findCriticalPath(todosWithDates);
+      
       const updatedTodos = todosWithDates.map((todo) => ({
         ...todo,
         isOnCriticalPath: criticalPath.includes(todo.id),
+        // Ensure _order is preserved
+        _order: todo._order || Date.now()
       }));
 
       setTodos(updatedTodos);
@@ -129,6 +149,7 @@ export default function Home() {
     if (!newTodo.trim()) return;
 
     const tempId = `temp-${Date.now()}`; // Create a temporary string ID
+    const newOrder = Date.now(); // Generate a timestamp for ordering
     setIsLoading(true);
     
     // Set loading state for the new todo
@@ -146,6 +167,7 @@ export default function Home() {
         createdAt: new Date(),
         isOnCriticalPath: false,
         earliestStartDate: new Date(),
+        _order: newOrder, // Add the order timestamp
       };
 
       // Add the temporary todo to the list immediately for a responsive UI
@@ -262,7 +284,7 @@ export default function Home() {
       <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Task Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Things To Do App</h1>
             <p className="text-gray-600 text-sm">
               Manage your projects with visual dependencies
             </p>
