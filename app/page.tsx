@@ -12,7 +12,6 @@ import {
 } from "./utils/graphUtils";
 import { Plus, Calendar, FileText, LinkIcon } from "lucide-react";
 
-// Dynamically import TaskGraph with SSR disabled
 const TaskGraph = dynamic(() => import("@/app/components/TaskGraph"), {
   ssr: false,
 });
@@ -41,7 +40,6 @@ export default function Home() {
     fetchInitialData();
   }, []);
 
-  // After todos load/change, fetch images for todos with descriptions but no image
   useEffect(() => {
     todos.forEach((todo) => {
       const key = String(todo.id);
@@ -55,7 +53,6 @@ export default function Home() {
     if (!query) return;
 
     try {
-      // Check if we already have a cached result for this query
       const queryCacheKey = `img_${encodeURIComponent(query)}`;
       const cachedUrl = typeof window !== "undefined"
         ? localStorage.getItem(queryCacheKey)
@@ -76,7 +73,6 @@ export default function Home() {
       const url: string | undefined = data?.photos?.[0]?.src?.medium;
 
       if (url) {
-        // Cache the URL by both todoId and query
         if (typeof window !== "undefined") {
           localStorage.setItem(queryCacheKey, url);
         }
@@ -94,11 +90,9 @@ export default function Home() {
       const res = await fetch("/api/todos");
       const data = await res.json();
 
-      // Parse todos and add calculated fields
       const todosWithCalculations: TodoWithCalculations[] = data.map(
         (todo: Todo) => ({
           ...todo,
-          // support DBs where dependencies may be JSON string or array
           dependenciesArray: Array.isArray(todo.dependencies)
             ? (todo.dependencies as number[])
             : (() => {
@@ -115,10 +109,8 @@ export default function Home() {
         })
       );
 
-      // Calculate graph dates
       const todosWithDates = calculateEarliestStartDates(todosWithCalculations);
 
-      // Mark critical path
       const criticalPath = findCriticalPath(todosWithDates);
       const updatedTodos = todosWithDates.map((todo) => ({
         ...todo,
@@ -138,7 +130,6 @@ export default function Home() {
     try {
       setIsLoading(true);
 
-      // Check for circular dependencies locally
       const tempTodo: TodoWithCalculations = {
         id: -1, // Temporary ID for the new todo
         title: newTodo.trim(),
@@ -256,7 +247,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Add Task Form */}
+
       {showAddForm && (
         <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 px-6 py-4">
           <form onSubmit={handleAddTodo} className="space-y-4">
@@ -297,8 +288,12 @@ export default function Home() {
                   }
                   placeholder="Dependencies"
                   className="react-select-container"
-                  classNamePrefix="react-select"
+                  classNamePrefix="text-gray-600 react-select"
                   isMulti
+                  menuPortalTarget={document.body}
+                  styles={{
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                  }}
                 />
               </div>
               <input
@@ -329,7 +324,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Main Content */}
+
       <div className="flex h-[calc(100vh-8rem)] min-h-0">
         {/* Left Panel - Task List */}
         <div className="w-1/2 p-6 overflow-y-auto">
@@ -363,7 +358,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right Panel - Task Graph */}
         <div className="w-1/2 p-6 border-l border-gray-200/50 min-h-0">
           <div className="flex flex-col h-full min-h-0 bg-white/60 backdrop-blur-sm rounded-xl shadow-lg border border-white/20">
             <div className="p-6 border-b border-gray-200/50 shrink-0">

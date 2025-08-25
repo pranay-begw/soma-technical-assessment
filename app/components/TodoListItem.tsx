@@ -40,7 +40,7 @@ export default function TodoListItem({
         : 'border-gray-200/50'
     } ${isExpanded ? 'shadow-lg' : ''}`}>
       
-      {/* Header - Always Visible */}
+
       <div 
         className="p-4 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -112,7 +112,7 @@ export default function TodoListItem({
         </div>
       </div>
 
-      {/* Expanded Content */}
+
       {isExpanded && (
         <div className="px-4 pb-4 space-y-4 border-t border-gray-200/30">
           
@@ -126,7 +126,7 @@ export default function TodoListItem({
             </div>
           )}
 
-          {/* Dates Information */}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-blue-50/50 rounded-lg p-3">
               <div className="flex items-center gap-2 text-blue-700 mb-1">
@@ -149,7 +149,7 @@ export default function TodoListItem({
             </div>
           </div>
 
-          {/* Dependencies */}
+
           {dependencies.length > 0 && (
             <div>
               <h4 className="font-medium text-gray-700 mb-2">Dependencies</h4>
@@ -166,7 +166,7 @@ export default function TodoListItem({
             </div>
           )}
 
-          {/* Image */}
+
           {imageUrl && !imageError && (
             <div>
               <h4 className="font-medium text-gray-700 mb-2">Visual</h4>

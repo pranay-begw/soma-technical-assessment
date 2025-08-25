@@ -18,7 +18,6 @@ export async function GET() {
       },
     });
 
-    // Parse the dependencies string into an array of numbers
     const parsedTodos = todos.map(todo => ({
       ...todo,
       dependencies: todo.dependencies ? JSON.parse(todo.dependencies) : []
@@ -50,14 +49,12 @@ export async function POST(request: Request) {
         dueDate: new Date(dueDate),
         description,
         imageUrl: imageUrl || null,
-        // Ensure dependencies is a valid JSON string
         dependencies: Array.isArray(dependencies) 
           ? JSON.stringify(dependencies) 
           : '[]'
       },
     });
 
-    // Return the todo with parsed dependencies
     return NextResponse.json({
       ...todo,
       dependencies: todo.dependencies ? JSON.parse(todo.dependencies) : []

@@ -98,7 +98,6 @@ export default function EditTodoModal({
 
   if (!isOpen) return null;
 
-  // Render to <body> to escape any parent stacking contexts
   return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
@@ -106,10 +105,8 @@ export default function EditTodoModal({
       role="dialog"
       onClick={onClose}
     >
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
 
-      {/* Modal card */}
       <div
         className="text-gray-600 relative bg-white w-full max-w-xl rounded-xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}

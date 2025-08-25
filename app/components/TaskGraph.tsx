@@ -34,7 +34,6 @@ interface TaskNodeData {
   task: TaskGraphProps["tasks"][0];
 }
 
-// Custom Node Component (with handles)
 const TaskNode: React.FC<
   NodeProps<TaskNodeData> & {
     openNodeId: string | null;
@@ -49,7 +48,6 @@ const TaskNode: React.FC<
 
   return (
     <>
-      {/* Target handle on top, Source handle on bottom */}
       <Handle type="target" position={Position.Top} id="t" />
       <div
         className={`relative px-4 py-3 rounded-xl border transition-all cursor-pointer w-[180px] ${
@@ -93,7 +91,6 @@ const TaskNode: React.FC<
       </div>
       <Handle type="source" position={Position.Bottom} id="b" />
 
-      {/* Details Modal */}
       {showDetails && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4"
@@ -191,7 +188,6 @@ const TaskGraph: React.FC<TaskGraphProps> = ({ tasks }) => {
     const edges: Edge[] = [];
     const levels: Record<number, number> = {};
 
-    // Longest-path level assignment
     const calculateLevel = (taskId: number, visited = new Set<number>()): number => {
       if (visited.has(taskId)) return 0;
       visited.add(taskId);
@@ -213,13 +209,11 @@ const TaskGraph: React.FC<TaskGraphProps> = ({ tasks }) => {
       (tasksByLevel[level] ??= []).push(task);
     });
 
-    // Layout constants
     const nodeWidth = 200;
     const nodeHeight = 120;
     const vGap = 140;
     const hGap = 240;
 
-    // Build nodes
     Object.entries(tasksByLevel).forEach(([levelStr, levelTasks]) => {
       const level = parseInt(levelStr, 10);
       const y = level * (nodeHeight + vGap);
@@ -238,7 +232,6 @@ const TaskGraph: React.FC<TaskGraphProps> = ({ tasks }) => {
       });
     });
 
-    // Build edges (solid, simple)
     tasks.forEach((task) => {
       task.dependenciesArray?.forEach((depId) => {
         const sourceTask = tasks.find((t) => t.id === depId);
@@ -282,7 +275,6 @@ const TaskGraph: React.FC<TaskGraphProps> = ({ tasks }) => {
 
   return (
     <div className="h-full min-h-0 flex flex-col">
-      {/* Graph area */}
       <div className="flex-1 min-h-0 relative">
         <ReactFlow
           nodes={nodes}
@@ -323,7 +315,6 @@ const TaskGraph: React.FC<TaskGraphProps> = ({ tasks }) => {
         </ReactFlow>
       </div>
 
-      {/* Footer summary stays visible */}
       {criticalPathTasks.length > 0 && (
         <div className="p-4 bg-red-50 border-t border-red-200/30 shrink-0">
           <h3 className="font-semibold text-red-800 mb-3 flex items-center gap-2">
